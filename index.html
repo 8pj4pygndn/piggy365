@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#2563EB" id="meta-theme-color" />
+  <title>Piggy365 — накопичення грошей</title>
+  <link rel="icon" href="data:image/svg+xml;utf8,<?xml version='1.0' encoding='utf-8'?><svg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%232563EB'/><text x='50%' y='56%' dominant-baseline='middle' text-anchor='middle' font-size='30' font-family='Arial' fill='%23fff'>🐷</text></svg>">
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Piggy365" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <style>
+:root{
+  --accent:#2563EB;
+  --success:#22C55E;
+  --danger:#EF4444;
+  --warning:#F59E0B;
+  --glass-bg: rgba(255,255,255,0.6);
+  --glass-blur: 12px;
+  --card-radius:24px;
+  --shadow: 0 10px 30px rgba(16,24,40,0.08);
+  --gap:20px;
+  --text:#0f172a;
+  --muted:#667085;
+  --bg:linear-gradient(180deg,#f4f7fb 0%, #ffffff 100%);
+  --card-height:60px;
+}
+body.theme-dark{
+  --glass-bg: rgba(18,23,31,0.36);
+  --text:#e6eef8;
+  --muted:#a8b3c9;
+  --bg: linear-gradient(180deg,#071126 0%, #071122 100%);
+}
+*{box-sizing:border-box}
+html,body,#app{height:100%}
+body{
+  margin:0;
+  font-family: "SF Pro Display","Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  color:var(--text);
+  background:var(--bg);
+  padding:env(safe-area-inset-top) 18px env(safe-area-inset-bottom);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing:antialiased;
+}
+.app-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  padding:12px 0;
+}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{font-size:28px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:linear-gradient(180deg,var(--accent),#3b82f6);color:white;box-shadow:var(--shadow)}
+.app-header h1{margin:0;font-size:18px;letter-spacing:0.2px}
+.controls{display:flex;gap:8px;align-items:center}
+.btn{background:transparent;border:none;padding:8px 12px;border-radius:12px;cursor:pointer;color:var(--text);font-weight:600}
+.btn.icon{padding:8px}
+.btn.primary{background:var(--accent);color:white;box-shadow:var(--shadow)}
+.btn.danger{background:rgba(239,68,68,0.08);color:var(--danger)}
+.container{max-width:1200px;margin:18px auto;display:flex;flex-direction:column;gap:18px}
+.top-card{display:flex;justify-content:space-between;align-items:center;padding:20px;border-radius:var(--card-radius);background:var(--glass-bg);backdrop-filter: blur(var(--glass-blur));box-shadow:var(--shadow)}
+.top-left h2{margin:0 0 8px;font-size:20px}
+.goal-meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:13px}
+.progress-wrapper{position:relative;width:140px;height:140px}
+.progress-ring{width:140px;height:140px}
+.ring-bg{fill:none;stroke:rgba(0,0,0,0.06);stroke-width:16}
+.ring-fg{fill:none;stroke:var(--accent);stroke-width:16;transition:stroke-dashoffset 600ms cubic-bezier(.2,.9,.2,1)}
+.progress-label{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+.subnav{display:flex;gap:12px;align-items:center}
+#search-input{flex:1;padding:10px;border-radius:12px;border:1px solid rgba(16,24,40,0.06)}
+.filters{display:flex;gap:8px}
+.filter{padding:8px 10px;border-radius:10px;border:1px solid rgba(16,24,40,0.04);background:transparent}
+.filter.active{background:var(--accent);color:white}
+.grid-area{margin-top:12px}
+.cards-grid{
+  display:grid;
+  grid-template-columns: repeat(15, 1fr);
+  gap:10px;
+  align-items:stretch;
+  width:100%;
+  min-height:200px;
+}
+.card{
+  background:linear-gradient(180deg,rgba(255,255,255,0.7),rgba(255,255,255,0.5));
+  border-radius:16px;
+  padding:10px;
+  box-shadow:0 4px 10px rgba(2,6,23,0.06);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:var(--card-height);
+  font-weight:700;
+  cursor:pointer;
+  user-select:none;
+  transform-origin:center;
+  transition:transform 220ms cubic-bezier(.2,.9,.2,1), box-shadow 220ms;
+  position:relative;
+  overflow:hidden;
+}
+.card.small{height:44px;font-size:13px}
+.card.closed{background:linear-gradient(90deg,var(--success),#16a34a);color:white;text-decoration:line-through}
+.card .check{position:absolute;right:8px;top:6px;font-size:14px;display:none}
+.card.closed .check{display:block}
+.card.ripple::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  transform:scale(0);
+  opacity:0.6;
+  pointer-events:none;
+  background:rgba(255,255,255,0.5);
+  animation:ripple 700ms linear;
+}
+@keyframes ripple{
+  to{transform:scale(5);opacity:0}
+}
+.tabs{display:flex;gap:8px;margin-top:18px}
+.tab{padding:8px 12px;border-radius:10px;border:0;background:transparent;cursor:pointer}
+.tab.active{background:rgba(16,24,40,0.06)}
+.tab-content{margin-top:12px}
+.tab-pane{display:none}
+.tab-pane.active{display:block}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.stat{background:var(--glass-bg);padding:12px;border-radius:12px}
+.stat-value{font-weight:700;font-size:18px}
+.heatmap{display:flex;gap:4px;flex-wrap:wrap;padding:10px;background:var(--glass-bg);border-radius:12px}
+.heatmap .day{width:12px;height:12px;border-radius:3px;background:rgba(2,6,23,0.06)}
+.heatmap .day.level-1{background:#dbeafe}
+.heatmap .day.level-2{background:#93c5fd}
+.heatmap .day.level-3{background:#3b82f6}
+.heatmap .day.level-4{background:#1e40af}
+.history-list{display:flex;flex-direction:column;gap:8px}
+.history-item{display:flex;justify-content:space-between;align-items:center;background:var(--glass-bg);padding:10px;border-radius:10px}
+.achievements-grid{display:flex;gap:12px;flex-wrap:wrap}
+.achievement{background:var(--glass-bg);padding:12px;border-radius:12px;width:150px;text-align:center}
+.modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:white;padding:18px;border-radius:14px;box-shadow:var(--shadow);z-index:200;min-width:320px}
+.modal label{display:flex;flex-direction:column;margin:8px 0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+@media (max-width:900px){
+  .cards-grid{grid-template-columns: repeat(10, 1fr)}
+  .progress-wrapper{width:110px;height:110px}
+}
+@media (max-width:600px){
+  .cards-grid{grid-template-columns: repeat(5, 1fr)}
+  .top-card{flex-direction:column;align-items:flex-start;gap:12px}
+}
+.hidden{display:none}
+.highlight{outline:4px solid rgba(37,99,235,0.12);transform:scale(1.02)}
+  </style>
+</head>
+<body class="theme-system">
+  <div id="app" role="application" aria-label="Piggy365">
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo" aria-hidden>🐷</div>
+        <h1>Piggy365</h1>
+      </div>
+      <div class="controls" role="toolbar" aria-label="Controls">
+        <button id="btn-new-goal" class="btn icon" title="Нова скарбничка">＋</button>
+        <button id="btn-export" class="btn" title="Експорт JSON">Export</button>
+        <button id="btn-import" class="btn" title="Імпорт JSON">Import</button>
+        <button id="btn-install" class="btn" hidden title="Встановити додаток">Install</button>
+        <button id="btn-settings" class="btn icon" title="Налаштування">⚙️</button>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="top-card glass" aria-labelledby="goal-name">
+        <div class="top-left">
+          <h2 id="goal-name">Нова ціль</h2>
+          <div class="goal-meta" id="goal-meta">
+            <div>🎯 Ціль <span id="goal-target">0 ₴</span></div>
+            <div>💰 Назбирано <span id="goal-saved">0 ₴</span></div>
+            <div>📈 <span id="goal-percent">0%</span></div>
+            <div>📅 Закрито карток <span id="goal-closed-count">0 / 0</span></div>
+          </div>
+        </div>
+        <div class="top-right">
+          <div class="progress-wrapper" aria-hidden>
+            <svg id="progress-ring" viewBox="0 0 120 120" class="progress-ring" aria-hidden>
+              <circle class="ring-bg" cx="60" cy="60" r="52" />
+              <circle class="ring-fg" cx="60" cy="60" r="52" stroke-linecap="round" />
+            </svg>
+            <div class="progress-label">
+              <div id="progress-value">0%</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <nav class="subnav" aria-label="Search and filters">
+        <input id="search-input" placeholder="Пошук суми (наприклад 750)" aria-label="Пошук" />
+        <div class="filters" role="tablist" aria-label="Фільтри">
+          <button data-filter="all" class="filter active">Усі</button>
+          <button data-filter="active" class="filter">Активні</button>
+          <button data-filter="closed" class="filter">Закриті</button>
+          <button data-filter="today" class="filter">Лише сьогоднішня</button>
+        </div>
+        <div class="actions">
+          <button id="btn-pick-today" class="btn primary">Що відкласти сьогодні?</button>
+          <select id="goal-selector" aria-label="Оберіть скарбничку"></select>
+        </div>
+      </nav>
+
+      <section class="grid-area" aria-label="Сітка карток">
+        <div id="cards-grid" class="cards-grid" aria-live="polite" ></div>
+      </section>
+
+      <section class="tabs" role="tablist" aria-label="Навігація вкладок">
+        <button class="tab active" data-tab="stats" role="tab">Статистика</button>
+        <button class="tab" data-tab="history" role="tab">Історія</button>
+        <button class="tab" data-tab="achievements" role="tab">Досягнення</button>
+        <button class="tab" data-tab="settings" role="tab">Налаштування</button>
+      </section>
+
+      <section id="tab-content" class="tab-content" role="region">
+        <div id="tab-stats" class="tab-pane active" role="tabpanel">
+          <h3>Статистика</h3>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-value" id="stat-saved">0 ₴</div>
+              <div class="stat-label">Назбирано</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="stat-left">0 ₴</div>
+              <div class="stat-label">Залишилось</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="stat-percent">0%</div>
+              <div class="stat-label">Прогрес</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="stat-avg">0 ₴</div>
+              <div class="stat-label">Середній внесок</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="stat-min">0 ₴</div>
+              <div class="stat-label">Найменший</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="stat-max">0 ₴</div>
+              <div class="stat-label">Найбільший</div>
+            </div>
+          </div>
+
+          <h4>Календар активності</h4>
+          <div id="heatmap" class="heatmap" aria-hidden></div>
+
+          <h4>Графік накопичення</h4>
+          <canvas id="chart-savings" height="120" style="width:100%"></canvas>
+        </div>
+
+        <div id="tab-history" class="tab-pane" role="tabpanel">
+          <h3>Історія внесків</h3>
+          <div id="history-list" class="history-list"></div>
+        </div>
+
+        <div id="tab-achievements" class="tab-pane" role="tabpanel">
+          <h3>Досягнення</h3>
+          <div class="achievements-grid" id="achievements-grid"></div>
+        </div>
+
+        <div id="tab-settings" class="tab-pane" role="tabpanel">
+          <h3>Налаштування</h3>
+          <div class="settings">
+            <label>Тема:
+              <select id="theme-select">
+                <option value="system">Системна</option>
+                <option value="light">Світла</option>
+                <option value="dark">Темна</option>
+              </select>
+            </label>
+            <label>Вібрація:
+              <input id="opt-vibrate" type="checkbox" />
+            </label>
+            <label>Звуки:
+              <input id="opt-sounds" type="checkbox" />
+            </label>
+            <button id="btn-reset" class="btn danger">Скинути прогрес</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer" style="text-align:center;padding:18px;color:var(--muted)">
+      <div>© Piggy365 — v1.0</div>
+    </footer>
+
+    <div id="modal-root" aria-hidden="true"></div>
+
+    <template id="modal-new-goal">
+      <div class="modal" role="dialog" aria-modal="true">
+        <h3>Нова скарбничка</h3>
+        <label>Назва <input id="new-name" placeholder="Наприклад 'Авто'"></label>
+        <label>Ціль (грн) <input id="new-target" type="number" min="1" value="225000"></label>
+        <label>Днів <input id="new-days" type="number" min="1" value="365"></label>
+        <label>Мінімальний внесок (грн) <input id="new-min" type="number" min="50" step="50" value="300"></label>
+        <label>Максимальний внесок (грн) <input id="new-max" type="number" min="50" step="50" value="1200"></label>
+        <div class="modal-actions">
+          <button id="create-goal" class="btn primary">Створити</button>
+          <button id="cancel-create" class="btn">Скасувати</button>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <script type="module">
+/* Single-file Piggy365 - all modules combined */
+const STORAGE_KEY = 'piggy365_v1';
+
+/* Utilities */
+function _id(prefix='id_'){ return prefix + Math.random().toString(36).slice(2,10); }
+function numberWithSpaces(x){ return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g," "); }
+function formatCurrency(n){ return `${numberWithSpaces(n)} ₴`; }
+function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+function shuffle(arr){ for (let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]] } return arr; }
+
+/* Generator: rounds to unit, ensures exact sum, tries to diversify */
+function generateRoundedDistribution({ target, days, min, max, unit = 50, maxRetries = 12 }) {
+  const TU = Math.round(target / unit);
+  const minU = Math.round(min / unit);
+  const maxU = Math.round(max / unit);
+  const N = days;
+
+  if (minU * N > TU || maxU * N < TU) {
+    throw new Error('Impossible constraints: adjust min/max/target/days');
+  }
+
+  let attempt = 0;
+  while (attempt < maxRetries) {
+    const parts = _randomPartition(TU - N * minU, N, maxU - minU);
+    const valuesU = parts.map(x => x + minU);
+    _diversify(valuesU, maxU);
+    const amounts = valuesU.map(u => u * unit);
+    const s = amounts.reduce((a,b)=>a+b,0);
+    if (s === target) { shuffle(amounts); return amounts; }
+    const diff = (target - s) / unit;
+    if (diff !== 0 && Math.abs(diff) <= 10) {
+      try {
+        const repaired = _repair(amounts.map(a=>a/unit), diff, minU, maxU);
+        const final = repaired.map(u => u*unit);
+        if (final.reduce((a,b)=>a+b,0) === target) { shuffle(final); return final; }
+      } catch(e){}
+    }
+    attempt++;
+  }
+  throw new Error('Failed to generate distribution');
+}
+
+function _randomPartition(remaining, n, maxInc) {
+  const res = new Array(n).fill(0);
+  let rem = remaining;
+  for (let i = 0; i < n; i++) {
+    const slotsLeft = n - i - 1;
+    const maxForThis = Math.min(maxInc, rem);
+    const minForThis = Math.max(0, rem - slotsLeft * maxInc);
+    const v = (minForThis >= maxForThis) ? minForThis : Math.floor(Math.random() * (maxForThis - minForThis + 1)) + minForThis;
+    res[i] = v;
+    rem -= v;
+  }
+  shuffle(res);
+  return res;
+}
+
+function _diversify(arrU, maxU){
+  const freq = new Map();
+  for (let v of arrU) freq.set(v,(freq.get(v)||0)+1);
+  for (const [val,count] of freq.entries()){
+    if (count>1){
+      let need=count-1;
+      for (let i=0;i<arrU.length && need>0;i++){
+        if (arrU[i]===val){
+          const dir = Math.random()>0.5?1:-1;
+          const cand = arrU[i]+dir;
+          if (cand>=0 && cand<=maxU){ arrU[i]=cand; need--; }
+        }
+      }
+    }
+  }
+  shuffle(arrU);
+}
+
+function _repair(arrU, diff, minU, maxU){
+  const res = arrU.slice();
+  let remaining = diff;
+  const n = res.length;
+  let attempts=0;
+  while (remaining!==0 && attempts < n*8){
+    const idx = Math.floor(Math.random()*n);
+    if (remaining>0){
+      if (res[idx] < maxU) { res[idx]++; remaining--; }
+    } else {
+      if (res[idx] > minU) { res[idx]--; remaining++; }
+    }
+    attempts++;
+  }
+  if (remaining!==0) throw new Error('Repair failed');
+  return res;
+}
+
+/* Animations & UI effects */
+function rippleEffect(el){
+  el.classList.add('ripple');
+  setTimeout(()=>el.classList.remove('ripple'),700);
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+function flipAnimation(el){
+  el.animate([
+    { transform: 'rotateX(0deg) scale(1)' },
+    { transform: 'rotateX(90deg) scale(0.96)' },
+    { transform: 'rotateX(0deg) scale(1)' }
+  ], { duration:420, easing:'cubic-bezier(.2,.9,.2,1)' });
+}
+function animateProgressRing(svgEl, percent){
+  const fg = svgEl.querySelector('.ring-fg');
+  const r = fg.r.baseVal.value;
+  const c = 2 * Math.PI * r;
+  fg.style.strokeDasharray = `${c} ${c}`;
+  const offset = c - (percent / 100) * c;
+  fg.style.strokeDashoffset = offset;
+  const label = document.getElementById('progress-value');
+  if (label) label.textContent = `${Math.round(percent)}%`;
+}
+function confettiBurst(container=document.body, count=60, color='var(--success)'){
+  for (let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.style.position='fixed';
+    el.style.left=`${50 + (Math.random()*80 - 40)}%`;
+    el.style.top=`${30 + Math.random()*20}%`;
+    el.style.width='8px';
+    el.style.height='12px';_
